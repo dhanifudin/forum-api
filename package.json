@@ -1,0 +1,41 @@
+{
+  "name": "forum-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "start:dev": "nodemon src/app.js",
+    "test": "jest --setupFiles dotenv/config -i",
+    "test:watch:change": "jest --watch --setupFiles dotenv/config -i",
+    "test:watch": "jest --watchAll --coverage --setupFiles dotenv/config -i",
+    "migrate": "node-pg-migrate",
+    "migrate:test": "node-pg-migrate -f config/database/test.json",
+    "lint": "eslint src/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hapi/hapi": "^20.1.5",
+    "@hapi/jwt": "^2.0.1",
+    "awilix": "^6.1.0",
+    "bcrypt": "^5.0.1",
+    "dotenv": "^10.0.0",
+    "nanoid": "^3.1.23",
+    "pg": "^8.6.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.24",
+    "eslint": "^8.11.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-jest": "^26.1.1",
+    "eslint-plugin-n": "^15.0.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "jest": "^27.0.6",
+    "node-pg-migrate": "^5.10.0",
+    "nodemon": "^2.0.9"
+  }
+}
