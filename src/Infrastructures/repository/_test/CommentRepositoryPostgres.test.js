@@ -191,10 +191,12 @@ describe('CommentRepositoryPostgres', () => {
 
       expect(comment1.id).toEqual('comment-001')
       expect(comment1.username).toEqual('alice')
+      expect(comment1.date).toBeDefined()
       expect(comment1.content).toEqual('alice thread comment content')
 
       expect(comment2.id).toEqual('comment-002')
       expect(comment2.username).toEqual('bob')
+      expect(comment1.date).toBeDefined()
       expect(comment2.content).toEqual('**komentar telah dihapus**')
     })
   })

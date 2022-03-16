@@ -30,9 +30,13 @@ describe('ThreadRepositoryPostgres', () => {
       const fakeIdGenerator = () => '123'
       const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, fakeIdGenerator)
 
-      await threadRepositoryPostgres.addThread(newThread)
+      const addedThread = await threadRepositoryPostgres.addThread(newThread)
 
       const threads = await ThreadsTableTestHelper.findThreadById(`thread-${fakeIdGenerator()}`)
+
+      expect(addedThread.id).toEqual(`thread-${fakeIdGenerator()}`)
+      expect(addedThread.title).toEqual(threadPayload.title)
+      expect(addedThread.owner).toEqual(threadPayload.owner)
 
       expect(threads).toHaveLength(1)
       expect(threads[0].id).toEqual(`thread-${fakeIdGenerator()}`)
@@ -55,12 +59,19 @@ describe('ThreadRepositoryPostgres', () => {
 
     it('should return correct thread', async () => {
       const ownerId = await UsersTableTestHelper.addUser({ username: 'dicoding' })
-      const threadId = await ThreadsTableTestHelper.addThread({ owner: ownerId })
+      const threadId = await ThreadsTableTestHelper.addThread({
+        title: 'thread title',
+        body: 'thread body',
+        owner: ownerId
+      })
       const threadRepositoryPostgres = new ThreadRepositoryPostgres(pool, {})
       const thread = await threadRepositoryPostgres.getThreadById(threadId)
 
-      expect(thread.username).toEqual('dicoding')
       expect(thread.id).toEqual(threadId)
+      expect(thread.title).toEqual('thread title')
+      expect(thread.body).toEqual('thread body')
+      expect(thread.date).toBeDefined()
+      expect(thread.username).toEqual('dicoding')
     })
   })
 
