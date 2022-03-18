@@ -1,11 +1,11 @@
 class UsersHandler {
-  constructor(container) {
+  constructor (container) {
     this.container = container
 
     this.postUserHandler = this.postUserHandler.bind(this)
   }
 
-  async postUserHandler(request, h) {
+  async postUserHandler (request, h) {
     const addUserUseCase = this.container.resolve('AddUserUseCase')
     const addedUser = await addUserUseCase.execute(request.payload)
 

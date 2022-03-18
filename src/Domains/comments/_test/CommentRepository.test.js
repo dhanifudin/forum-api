@@ -19,6 +19,5 @@ describe('Comment repository interface', () => {
     await expect(commentRepository.getCommentsByThreadId('')).rejects.toThrowError(
       'COMMENT_REPOSITORY.METHOD_NOT_IMPLEMENTED'
     )
-
   })
 })

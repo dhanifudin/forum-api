@@ -5,13 +5,13 @@ const AddedComment = require('../../Domains/comments/entities/AddedComment')
 const CommentDetail = require('../../Domains/comments/entities/CommentDetail')
 
 class CommentRepositoryPostgres extends CommentRepository {
-  constructor(pool, idGenerator) {
+  constructor (pool, idGenerator) {
     super()
     this.pool = pool
     this.idGenerator = idGenerator
   }
 
-  async addComment({ threadId, content, owner }) {
+  async addComment ({ threadId, content, owner }) {
     const id = `comment-${this.idGenerator()}`
 
     const query = {
@@ -25,7 +25,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     return new AddedComment({ ...result.rows[0] })
   }
 
-  async verifyCommentAccess({ commentId, threadId, credentialId }) {
+  async verifyCommentAccess ({ commentId, threadId, credentialId }) {
     const query = {
       text: `SELECT id, owner, thread_id
              FROM comments
@@ -46,7 +46,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     }
   }
 
-  async deleteCommentById(id) {
+  async deleteCommentById (id) {
     const query = {
       text: `UPDATE comments
              SET is_delete = true
@@ -58,7 +58,7 @@ class CommentRepositoryPostgres extends CommentRepository {
     return rows[0].id
   }
 
-  async getCommentsByThreadId(id) {
+  async getCommentsByThreadId (id) {
     const query = {
       text: `SELECT comments.id, users.username, date, content, is_delete
              FROM comments
@@ -71,7 +71,6 @@ class CommentRepositoryPostgres extends CommentRepository {
     const { rows } = await this.pool.query(query)
     return rows.map((row) => new CommentDetail({ ...row }))
   }
-
 }
 
 module.exports = CommentRepositoryPostgres

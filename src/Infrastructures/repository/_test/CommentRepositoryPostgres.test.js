@@ -184,7 +184,7 @@ describe('CommentRepositoryPostgres', () => {
 
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {})
 
-      const results = await commentRepositoryPostgres.getCommentsByThreadId( threadId1)
+      const results = await commentRepositoryPostgres.getCommentsByThreadId(threadId1)
 
       expect(results).toHaveLength(2)
       const [comment1, comment2] = results
@@ -200,5 +200,4 @@ describe('CommentRepositoryPostgres', () => {
       expect(comment2.content).toEqual('**komentar telah dihapus**')
     })
   })
-
 })

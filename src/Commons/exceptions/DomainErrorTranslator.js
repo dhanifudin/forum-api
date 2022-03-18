@@ -1,7 +1,7 @@
 const InvariantError = require('./InvariantError')
 
 const DomainErrorTranslator = {
-  translate(error) {
+  translate (error) {
     return DomainErrorTranslator._directories[error.message] || error
   }
 }

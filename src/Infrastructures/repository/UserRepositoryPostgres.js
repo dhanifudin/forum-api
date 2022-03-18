@@ -3,13 +3,13 @@ const RegisteredUser = require('../../Domains/users/entities/RegisteredUser')
 const UserRepository = require('../../Domains/users/UserRepository')
 
 class UserRepositoryPostgres extends UserRepository {
-  constructor(pool, idGenerator) {
+  constructor (pool, idGenerator) {
     super()
     this._pool = pool
     this._idGenerator = idGenerator
   }
 
-  async verifyAvailableUsername(username) {
+  async verifyAvailableUsername (username) {
     const query = {
       text: 'SELECT username FROM users WHERE username = $1',
       values: [username]
@@ -35,7 +35,7 @@ class UserRepositoryPostgres extends UserRepository {
     return new RegisteredUser({ ...result.rows[0] })
   }
 
-  async getPasswordByUsername(username) {
+  async getPasswordByUsername (username) {
     const query = {
       text: 'SELECT password FROM users WHERE username = $1',
       values: [username]
@@ -50,7 +50,7 @@ class UserRepositoryPostgres extends UserRepository {
     return result.rows[0].password
   }
 
-  async getIdByUsername(username) {
+  async getIdByUsername (username) {
     const query = {
       text: 'SELECT id FROM users WHERE username = $1',
       values: [username]
