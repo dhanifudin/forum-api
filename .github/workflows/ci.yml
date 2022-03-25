@@ -38,12 +38,12 @@ jobs:
           npm run test
         env:
           CI: true
-          PGHOST_TEST: 127.0.0.1
+          PGHOST_TEST: postgres
           PGUSER_TEST: postgres
           PGDATABASE_TEST: forum
           PGPASSWORD_TEST: postgres
           PGPORT_TEST: 5432
-          PGHOST: 127.0.0.1
+          PGHOST: postgres
           PGUSER: postgres
           PGDATABASE: forum
           PGPASSWORD: postgres
