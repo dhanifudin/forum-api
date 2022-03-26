@@ -1,0 +1,45 @@
+name: Continuous Deployment
+ 
+on: 
+  push:
+    branches:
+      - master
+ 
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - name: SSH and deploy app
+      uses: appleboy/ssh-action@master
+      env:
+        HOST: ${{ secrets.HOST }}
+        PORT: ${{ secrets.PORT }}
+        PGHOST: ${{ secrets.PGHOST }}
+        PGUSER: ${{ secrets.PGUSER }}
+        PGDATABASE: ${{ secrets.PGDATABASE }}
+        PGPASSWORD: ${{ secrets.PGPASSWORD }}
+        PGPORT: ${{ secrets.PGPORT }}
+        PGHOST_TEST: ${{ secrets.PGHOST_TEST }}
+        PGUSER_TEST: ${{ secrets.PGUSER_TEST }}
+        PGDATABASE_TEST: ${{ secrets.PGDATABASE_TEST }}
+        PGPORT_TEST: ${{ secrets.PGPORT_TEST }}
+        ACCESS_TOKEN_KEY: ${{ secrets.ACCESS_TOKEN_KEY }}
+        REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
+        ACCESS_TOKEN_AGE: ${{ secrets.ACCESS_TOKEN_AGE }}
+        DOCROOT: ${{ secrets.DOCROOT }}
+        REPO_URL: ${{ secrets.REPO_URL }}
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        envs: HOST,PORT,PGHOST,PGUSER,PGDATABASE,PGPASSWORD,PGPORT,PGHOST_TEST,PGUSER_TEST,PGDATABASE_TEST,PGPORT_TEST,ACCESS_TOKEN_KEY,REFRESH_TOKEN_KEY,ACCESS_TOKEN_AGE,DOCROOT,REPO_URL
+        script_stop: true
+        script: |
+          sudo apt install -y gettext-base
+          git -C $DOCROOT pull || git clone --single-branch --branch master $REPO_URL $DOCROOT
+          envsubst > ${DOCROOT}/.env < ${DOCROOT}/.env.example
+          npm install
+          npm run migrate up
+          pm2 restart forum-api
