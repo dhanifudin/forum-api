@@ -32,7 +32,7 @@ jobs:
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         envs: HOST,PORT,PGHOST,PGUSER,PGDATABASE,PGPASSWORD,PGPORT,PGHOST_TEST,PGUSER_TEST,PGDATABASE_TEST,PGPORT_TEST,ACCESS_TOKEN_KEY,REFRESH_TOKEN_KEY,ACCESS_TOKEN_AGE,DOCROOT,REPO_URL
         script_stop: true
