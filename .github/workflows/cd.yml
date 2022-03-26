@@ -37,7 +37,7 @@ jobs:
         envs: APP_HOST,APP_PORT,PGHOST,PGUSER,PGDATABASE,PGPASSWORD,PGPORT,PGHOST_TEST,PGUSER_TEST,PGDATABASE_TEST,PGPORT_TEST,ACCESS_TOKEN_KEY,REFRESH_TOKEN_KEY,ACCESS_TOKEN_AGE,DOCROOT,REPO_URL
         script_stop: true
         script: |
-          sudo apt install -y gettext-base
+          sudo apt-get install -y gettext-base
           git -C $DOCROOT pull || git clone --single-branch --branch master $REPO_URL $DOCROOT
           envsubst > ${DOCROOT}/.env < ${DOCROOT}/.env.example
           npm install
