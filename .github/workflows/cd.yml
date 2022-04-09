@@ -38,6 +38,11 @@ jobs:
         oci setup repair-file-permissions --file /home/runner/.oci/config
         oci setup repair-file-permissions --file /home/runner/.oci/oci_api_key.pem
 
+    - name: 'Fix Config File Permissions'
+      run: |
+        oci setup repair-file-permissions --file /home/runner/.oci/config
+        oci setup repair-file-permissions --file /home/runner/.oci/oci_api_key.pem
+
     - name: 'Check Existing Instance'
       run: |
         echo "INSTANCE_OCID=$( \
@@ -49,7 +54,7 @@ jobs:
           --raw-output \
           )" >> $GITHUB_ENV
 
-    - name: 'Create VM Instance'
+    - name: 'Create Instance'
       if: ${{!env.INSTANCE_OCID}}
       run: |
         echo "INSTANCE_OCID=$( \
@@ -71,14 +76,14 @@ jobs:
     - name: 'Get Instance IP'
       run: |
         echo "INSTANCE_IP=$( \
-            oci compute instance list-vnics \
-            --instance-id ${{env.INSTANCE_OCID}} \
-            --query 'data [0]."public-ip"' \
-            --raw-output \
+          oci compute instance list-vnics \
+          --instance-id ${{env.INSTANCE_OCID}} \
+          --query 'data [0]."public-ip"' \
+          --raw-output \
           )" >> $GITHUB_ENV
         echo Instance IP: ${{ env.INSTANCE_IP }}
 
-    - name: 'Waiting SSH service activated'
+    - name: 'Wait for SSH'
       run: |
         while ! nc -w5 -z ${{ env.INSTANCE_IP }} 22; do
         sleep 5
