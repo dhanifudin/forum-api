@@ -1,45 +1,104 @@
 name: Continuous Deployment
- 
-on: 
+
+on:
   push:
     branches:
       - master
- 
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
- 
+
     steps:
-    - name: SSH and deploy app
-      uses: appleboy/ssh-action@v0.1.0
-      env:
-        APP_HOST: ${{ secrets.APP_HOST }}
-        APP_PORT: ${{ secrets.APP_PORT }}
-        PGHOST: ${{ secrets.PGHOST }}
-        PGUSER: ${{ secrets.PGUSER }}
-        PGDATABASE: ${{ secrets.PGDATABASE }}
-        PGPASSWORD: ${{ secrets.PGPASSWORD }}
-        PGPORT: ${{ secrets.PGPORT }}
-        PGHOST_TEST: ${{ secrets.PGHOST_TEST }}
-        PGUSER_TEST: ${{ secrets.PGUSER_TEST }}
-        PGDATABASE_TEST: ${{ secrets.PGDATABASE_TEST }}
-        PGPORT_TEST: ${{ secrets.PGPORT_TEST }}
-        ACCESS_TOKEN_KEY: ${{ secrets.ACCESS_TOKEN_KEY }}
-        REFRESH_TOKEN_KEY: ${{ secrets.REFRESH_TOKEN_KEY }}
-        ACCESS_TOKEN_AGE: ${{ secrets.ACCESS_TOKEN_AGE }}
-        DOCROOT: ${{ secrets.DOCROOT }}
-        REPO_URL: ${{ secrets.REPO_URL }}
+    - name: 'Checkout'
+      uses: actions/checkout@v2
+
+    - name: 'Configure OCI config'
+      run: |
+        mkdir ~/.oci
+        echo "[DEFAULT]" >> ~/.oci/config
+        echo "user=${{secrets.OCI_USER_OCID}}" >> ~/.oci/config
+        echo "fingerprint=${{secrets.OCI_FINGERPRINT}}" >> ~/.oci/config
+        echo "region=${{secrets.OCI_REGION}}" >> ~/.oci/config
+        echo "tenancy=${{secrets.OCI_TENANCY_OCID}}" >> ~/.oci/config
+        echo "key_file=~/.oci/oci_api_key.pem" >> ~/.oci/config
+        echo "${{secrets.OCI_KEY_FILE}}" >> ~/.oci/oci_api_key.pem
+        echo "${{secrets.OCI_KEY_PUBLIC}}" >> ~/.oci/oci_api_key_public.pem
+
+    - name: 'Install OCI CLI'
+      run: |
+        curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
+        chmod +x install.sh
+        ./install.sh --accept-all-defaults
+        echo "/home/runner/bin" >> $GITHUB_PATH
+        exec -l $SHELL
+
+    - name: 'Fix Config File Permissions'
+      run: |
+        oci setup repair-file-permissions --file /home/runner/.oci/config
+        oci setup repair-file-permissions --file /home/runner/.oci/oci_api_key.pem
+
+    - name: 'Check Existing Instance'
+      run: |
+        echo "INSTANCE_OCID=$( \
+          oci compute instance list \
+          --lifecycle-state RUNNING \
+          --compartment-id ${{secrets.VM_COMPARTMENT_OCID}} \
+          --display-name forum-api \
+          --query "data [0].id" \
+          --raw-output \
+          )" >> $GITHUB_ENV
+
+    - name: 'Create VM Instance'
+      if: ${{!env.INSTANCE_OCID}}
+      run: |
+        echo "INSTANCE_OCID=$( \
+          oci compute instance launch \
+          -c ${{secrets.VM_COMPARTMENT_OCID}} \
+          --availability-domain ${{secrets.VM_AVAILABILITY_DOMAIN}} \
+          --shape ${{secrets.VM_SHAPE}} \
+          --shape-config '{"memoryInGBs": 1, "ocpus": 1}' \
+          --assign-public-ip true \
+          --display-name cicd-demo \
+          --image-id ${{secrets.VM_CUSTOM_IMAGE_OCID}} \
+          --ssh-authorized-keys-file /home/runner/.oci/oci_api_key_public.pem \
+          --subnet-id ${{secrets.VM_SUBNET_OCID}} \
+          --wait-for-state RUNNING \
+          --query "data.id" \
+          --raw-output \
+          )" >> $GITHUB_ENV
+
+    - name: 'Get Instance IP'
+      run: |
+        echo "INSTANCE_IP=$( \
+            oci compute instance list-vnics \
+            --instance-id ${{env.INSTANCE_OCID}} \
+            --query 'data [0]."public-ip"' \
+            --raw-output \
+          )" >> $GITHUB_ENV
+        echo Instance IP: ${{ env.INSTANCE_IP }}
+
+    - name: 'Waiting SSH service activated'
+      run: |
+        while ! nc -w5 -z ${{ env.INSTANCE_IP }} 22; do
+        sleep 5
+        echo "SSH not available..."
+        done; echo "SSH ready!"
+
+    - name: 'Copy Deployment Into VM Instance'
+      uses: appleboy/scp-action@master
       with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
-        port: 22
-        envs: APP_HOST,APP_PORT,PGHOST,PGUSER,PGDATABASE,PGPASSWORD,PGPORT,PGHOST_TEST,PGUSER_TEST,PGDATABASE_TEST,PGPORT_TEST,ACCESS_TOKEN_KEY,REFRESH_TOKEN_KEY,ACCESS_TOKEN_AGE,DOCROOT,REPO_URL
+        host: ${{ env.INSTANCE_IP }}
+        username: ubuntu
+        key: ${{ secrets.OCI_KEY_FILE }}
+        source: "deployment/"
+        target: "./"
+
+    - name: 'Running Deployment'
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.INSTANCE_IP }}
+        username: ubuntu
+        key: ${{ secrets.OCI_KEY_FILE }}
         script: |
-          sudo apt-get install -y gettext-base
-          git -C $DOCROOT pull || git clone --single-branch --branch master $REPO_URL $DOCROOT
-          cp ${DOCROOT}/.env.example ${DOCROOT}/.env
-          envsubst < ${DOCROOT}/.env
-          npm install --prefix $DOCROOT
-          npm --prefix $DOCROOT run migrate up
-          pm2 restart forum-api
+          sudo apt install -y docker-ce docker-ce-cli containerd.io
