@@ -1,0 +1,45 @@
+version: '3'
+services:
+  api:
+    container_name: forum
+    build:
+      context: ./app
+    ports:
+      - '5000:5000'
+    environment:
+      - HOST
+      - PORT
+      - PGHOST
+      - PGUSER
+      - PGDATABASE
+      - PGPASSWORD
+      - PGPORT
+      - ACCESS_TOKEN_KEY
+      - REFRESH_TOKEN_KEY
+      - ACCESS_TOKEN_AGE
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_DB: ${PGDATABASE}
+    ports:
+      - 5432:5432
+
+  nginx:
+    image: jonasal/nginx-certbot:latest
+    restart: always
+    environment:
+      - CERTBOT_EMAIL
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./certbot:/etc/letsencrypt
+      - ./nginx:/etc/nginx/user_conf.d
+    depends_on:
+      - api
