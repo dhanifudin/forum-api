@@ -11,4 +11,4 @@ RUN apk add --no-cache make gcc g++ python3 && \
 
 EXPOSE 5000
 
-CMD [ "node", "src/app.js" ]
+CMD ["npm", "start"]
